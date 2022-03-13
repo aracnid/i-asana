@@ -25,8 +25,6 @@ class AsanaInterface:
     def __init__(self) -> None:
         """Initializes the interface.
         """
-        logger.debug('working')
-
         # read environment variables
         asana_access_token = os.environ.get('ASANA_ACCESS_TOKEN')
 
