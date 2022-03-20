@@ -29,4 +29,13 @@ class AsanaInterface:
         asana_access_token = os.environ.get('ASANA_ACCESS_TOKEN')
 
         # initialize asana client
-        self.client = asana.Client.access_token(asana_access_token)
+        self._client = asana.Client.access_token(asana_access_token)
+
+    @property
+    def client(self) -> asana.client.Client:
+        """Returns the Asana Client object.
+
+        Returns:
+            Asana Client object.
+        """
+        return self._client
