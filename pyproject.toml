@@ -12,7 +12,8 @@ description-file = "README.md"
 requires-python = ">=3.9"
 requires = [
     "aracnid-logger",
-    "asana"
+    "asana",
+    "pytz"
 ]
 keywords = "python,asana"
 

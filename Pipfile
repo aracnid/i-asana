@@ -16,6 +16,7 @@ pytest = "*"
 [packages]
 aracnid-logger = "*"
 asana = "*"
+pytz = "*"
 
 [requires]
 python_version = "3.9"
