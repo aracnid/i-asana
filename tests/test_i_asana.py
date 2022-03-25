@@ -99,6 +99,22 @@ def test_create_task_in_section(asana):
     assert task
     assert task['memberships'][0]['section']['gid'] == SECTION_ID
 
+def test_create_subtask_in_task(asana):
+    """Tests create_task() function.
+    """
+    parent_id = '1202019477793842'
+    task = asana.create_task(
+        name='CREATE: subtask',
+        project_id=PROJECT_ID,
+        section_id=SECTION_ID,
+        parent_id=parent_id
+    )
+
+    assert task
+    assert task['parent']['gid'] == parent_id
+
+
+
 def test_read_task(asana):
     """Tests read_task() function.
     """

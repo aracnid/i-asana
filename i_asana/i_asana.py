@@ -49,7 +49,8 @@ class AsanaInterface:
         project_id: str,
         start: Union[date, datetime]=None,
         due: Union[date, datetime]=None,
-        section_id: str=None
+        section_id: str=None,
+        parent_id: str=None
     ) -> dict:
         """Create a task in the specified project and section
 
@@ -61,6 +62,7 @@ class AsanaInterface:
             start: Date or date-time when the task will start
             due: Date or date-time when the task is due.
             section_id: (Optional) Section identifier.
+            parent_id: (Optional) Parent identifier.
         """
         # create the task body
         body = {
@@ -79,8 +81,11 @@ class AsanaInterface:
                 elif isinstance(start, date):
                     body['start_on'] = start.isoformat()
 
-        # create the task
-        task = self._client.tasks.create_task(body)
+        # create the task/subtask
+        if parent_id:
+            task = self._client.tasks.create_subtask_for_task(parent_id, body)
+        else:
+            task = self._client.tasks.create_task(body)
 
         # add task to the specified section
         if task and section_id:
