@@ -1,6 +1,6 @@
 """Test functions for i_asana.py.
 """
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from aracnid_logger import Logger
 import pytest
 from pytz import utc
@@ -43,17 +43,19 @@ def test_create_task_no_due_date(asana):
 def test_create_task_due_date(asana):
     """Tests create_task() function.
     """
-    due_date = date.today()
-    due_date_str = due_date.isoformat()
+    start_date = date.today()
+    due_date = start_date + timedelta(days=5)
+    due_start_str = start_date.isoformat()
 
     task = asana.create_task(
-        name='CREATE: due-date',
+        name='CREATE: start-date',
+        start=start_date,
         due=due_date,
         project_id=PROJECT_ID
     )
 
     assert task
-    assert task['due_on'] == due_date_str
+    assert task['start_on'] == due_start_str
 
 def test_create_task_due_datetime(asana):
     """Tests create_task() function.
@@ -69,6 +71,21 @@ def test_create_task_due_datetime(asana):
 
     assert task
     assert task['due_at'][0:19] == due_datetime_str[0:19]
+
+def test_create_task_start_date(asana):
+    """Tests create_task() function.
+    """
+    due_date = date.today()
+    due_date_str = due_date.isoformat()
+
+    task = asana.create_task(
+        name='CREATE: due-date',
+        due=due_date,
+        project_id=PROJECT_ID
+    )
+
+    assert task
+    assert task['due_on'] == due_date_str
 
 def test_create_task_in_section(asana):
     """Tests create_task() function.

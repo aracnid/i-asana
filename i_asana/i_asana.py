@@ -43,13 +43,23 @@ class AsanaInterface:
         """
         return self._client
 
-    def create_task(self, name: str, project_id: str, due: Union[date, datetime]=None, section_id: str=None) -> dict:
+    def create_task(
+        self,
+        name: str,
+        project_id: str,
+        start: Union[date, datetime]=None,
+        due: Union[date, datetime]=None,
+        section_id: str=None
+    ) -> dict:
         """Create a task in the specified project and section
+
+        Start is only set if due is set.
 
         Args:
             name: Name of the task to create.
             project_id: Project identifier.
-            due: String representing the date or date-time when the task is due.
+            start: Date or date-time when the task will start
+            due: Date or date-time when the task is due.
             section_id: (Optional) Section identifier.
         """
         # create the task body
@@ -62,6 +72,12 @@ class AsanaInterface:
                 body['due_at'] = self.convert_asana_datetime(due)
             elif isinstance(due, date):
                 body['due_on'] = due.isoformat()
+
+            if start:
+                if isinstance(start, datetime):
+                    body['start_at'] = self.convert_asana_datetime(start)
+                elif isinstance(start, date):
+                    body['start_on'] = start.isoformat()
 
         # create the task
         task = self._client.tasks.create_task(body)
