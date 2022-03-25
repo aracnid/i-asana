@@ -203,3 +203,44 @@ class AsanaInterface:
                 due_datetime = datetime.combine(due_date, time(12, 0)).astimezone()
 
         return due_datetime
+
+    def read_subtasks(self, task_id: str) -> list:
+        """Read subtasks for a task with the specified task id.
+
+        Args:
+            task_id: Task identifier.
+        
+        Returns:
+            List of subtasks.
+        """
+        # get the compact list of subtasks
+        subtasks = self._client.tasks.get_subtasks_for_task(task_gid=task_id)
+
+        # read each full subtask
+        subtask_list = []
+        for summary_task in subtasks:
+            subtask_list.append(self.read_task(summary_task['gid']))
+
+        return subtask_list
+
+    def read_subtask_by_name(self, task_id: str, name: str) -> dict:
+        """Read subtask by name for a task with the specified task id.
+
+        Args:
+            task_id: Task identifier.
+            name: Name of the subtask to read.
+        
+        Returns:
+            Subtask as a dictionary.
+        """
+        # get the compact list of subtasks
+        subtasks = self._client.tasks.get_subtasks_for_task(task_gid=task_id)
+
+        # read each full subtask
+        subtask = None
+        for summary_task in subtasks:
+            if summary_task['name'] == name:
+                subtask = self.read_task(summary_task['gid'])
+                break
+
+        return subtask

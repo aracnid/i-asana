@@ -113,8 +113,6 @@ def test_create_subtask_in_task(asana):
     assert task
     assert task['parent']['gid'] == parent_id
 
-
-
 def test_read_task(asana):
     """Tests read_task() function.
     """
