@@ -23,7 +23,7 @@ def test_get_project_by_id(asana):
     result = asana.client.projects.get_project(project_id)
 
     assert result['gid'] == project_id
-    assert result['name'] == 'BrewOps'
+    assert result['name'] == '[LABH] BrewOps'
 
 def test_get_tasks_for_project(asana):
     """Tests get_tasks_for_project functionality.
@@ -36,14 +36,14 @@ def test_get_tasks_for_project(asana):
 def test_get_section_id_from_task(asana):
     """Tests get_task functionality.
     """
-    task = asana.client.tasks.get_task('1201958049378915')
+    task = asana.client.tasks.get_task('1202999621605567')
     section_id = task['memberships'][0]['section']['gid']
     section_name = task['memberships'][0]['section']['name']
 
     assert section_id
     assert section_name == 'Fermenting'
 
-    task = asana.client.tasks.get_task('1201958049378904')
+    task = asana.client.tasks.get_task('1202998731310349')
     section_id = task['memberships'][0]['section']['gid']
     section_name = task['memberships'][0]['section']['name']
 
