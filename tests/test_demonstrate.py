@@ -9,7 +9,7 @@ import i_asana as asn
 logger = Logger(__name__).get_logger()
 
 # initialize module variables
-project_id = '1201859291658493'  # BrewOps
+PROJECT_ID = '1201859291658493'  # BrewOps
 
 @pytest.fixture(name='asana')
 def fixture_asana_interface():
@@ -20,15 +20,15 @@ def fixture_asana_interface():
 def test_get_project_by_id(asana):
     """Tests project get functionality.
     """
-    result = asana.client.projects.get_project(project_id)
+    result = asana.client.projects.get_project(PROJECT_ID)
 
-    assert result['gid'] == project_id
+    assert result['gid'] == PROJECT_ID
     assert result['name'] == '[LABH] BrewOps'
 
 def test_get_tasks_for_project(asana):
     """Tests get_tasks_for_project functionality.
     """
-    tasks = asana.client.tasks.get_tasks_for_project(project_id)
+    tasks = asana.client.tasks.get_tasks_for_project(PROJECT_ID)
     for task in tasks:
         assert task
         logger.info(task['name'])

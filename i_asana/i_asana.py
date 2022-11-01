@@ -1,12 +1,14 @@
 """Class module to interface with Asana.
 """
+# pylint: disable=no-member
+
 from datetime import date, datetime, time
 import os
 from typing import Union
 
 from aracnid_logger import Logger
 import asana
-from pytz import timezone, utc
+from pytz import utc
 
 # initialize logging
 logger = Logger(__name__).get_logger()
@@ -89,7 +91,7 @@ class AsanaInterface:
 
         # add task to the specified section
         if task and section_id:
-            result = self._client.sections.add_task_for_section(
+            self._client.sections.add_task_for_section(
                 section_gid=section_id,
                 params={
                     'task': task['gid']
@@ -106,7 +108,7 @@ class AsanaInterface:
 
         Args:
             task_id: Task identifier.
-        
+
         Returns:
             Specified task as a dictionary.
         """
@@ -136,13 +138,11 @@ class AsanaInterface:
 
         Args:
             task_id: Task identifier.
-        
+
         Returns:
             None.
         """
         self._client.tasks.delete_task(task_gid=task_id)
-
-        return None
 
     @staticmethod
     def convert_asana_datetime(datetime_obj: datetime) -> str:
@@ -209,7 +209,7 @@ class AsanaInterface:
 
         Args:
             task_id: Task identifier.
-        
+
         Returns:
             List of subtasks.
         """
@@ -229,7 +229,7 @@ class AsanaInterface:
         Args:
             task_id: Task identifier.
             name: Name of the subtask to read.
-        
+
         Returns:
             Subtask as a dictionary.
         """

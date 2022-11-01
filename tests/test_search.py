@@ -1,9 +1,7 @@
 """Test functions for i_asana.py.
 """
-from datetime import date, datetime, timedelta
 from aracnid_logger import Logger
 import pytest
-from pytz import utc
 
 import i_asana as asn
 

@@ -26,9 +26,9 @@ def test_init_asana(asana):
     assert asana
 
     asana.client.options['client_name'] = 'brewbot'
-    me = asana.client.users.me()
+    user_me = asana.client.users.me()
 
-    assert me['workspaces'][0]['name'] == 'lakeannebrewhouse.com'
+    assert user_me['workspaces'][0]['name'] == 'lakeannebrewhouse.com'
 
 def test_create_task_no_due_date(asana):
     """Tests create_task() function.
