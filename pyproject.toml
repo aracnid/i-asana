@@ -1,25 +1,25 @@
+[tool.poetry]
+name = "i-asana"
+version = "1.0.0-alpha.5"
+description = "Python interface to Asana"
+authors = ["Jason Romano <aracnid@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+packages = [{include = "i_asana"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aracnid_logger = "^1.0.0a5"
+asana = "^2.0.0"
+pytz = "^2022.6"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.15.5"
+pytest = "^7.2.0"
+
 [build-system]
-requires = ["flit_core >=2,<4"]
-build-backend = "flit_core.buildapi"
-
-[tool.flit.metadata]
-module = "i_asana"
-author = "Jason Romano"
-author-email = "aracnid@gmail.com"
-home-page = "https://github.com/aracnid/i-asana"
-classifiers = ["License :: OSI Approved :: MIT License"]
-description-file = "README.md"
-requires-python = ">=3.10"
-requires = [
-    "aracnid-logger",
-    "asana",
-    "pytz"
-]
-keywords = "python,asana"
-
-[tools.flit.metadata.requires-extra]
-test = ["pytest"]
-build = ["flit", "pylint"]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 addopts = "-p no:warnings"
