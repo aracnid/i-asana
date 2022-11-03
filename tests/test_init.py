@@ -6,4 +6,3 @@ def test_version():
     """Tests that i-Asana was imported successfully.
     """
     assert i_asana.__version__
-    
