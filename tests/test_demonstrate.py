@@ -49,3 +49,22 @@ def test_get_section_id_from_task(asana):
 
     assert section_id
     assert section_name == 'Serving'
+
+    task = asana.client.tasks.get_task('1205092860586670')
+    section_id = task['memberships'][0]['section']['gid']
+    section_name = task['memberships'][0]['section']['name']
+
+    assert section_id
+    assert section_name == 'Weekly'
+
+def test_get_task_by_name(asana):
+    """Tests get task functionality by name.
+    """
+    workspace_id = '1108879292936985'
+    result = asana.client.tasks.search_tasks_for_workspace(workspace_id,
+        {
+            'text': '2023-W30'
+        }
+    )
+
+    assert result
