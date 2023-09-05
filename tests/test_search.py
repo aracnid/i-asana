@@ -38,3 +38,16 @@ def test_read_subtask_by_name(asana):
 
     assert task
     assert task['gid'] == '1202019477793847'
+
+def test_read_subtask_by_name_regex(asana):
+    """Tests read_subtask_by_name() function with regex argument.
+    """
+    task_id = '1202019477793844'
+    task = asana.read_subtask_by_name(
+        task_id=task_id,
+        name='^READ by regex',
+        regex=True
+    )
+
+    assert task
+    assert task['gid'] == '1205419546504122'

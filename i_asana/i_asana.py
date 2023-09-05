@@ -4,6 +4,7 @@
 
 from datetime import date, datetime, time
 import os
+import re
 from typing import Union
 
 from aracnid_logger import Logger
@@ -223,15 +224,16 @@ class AsanaInterface:
 
         return subtask_list
 
-    def read_subtask_by_name(self, task_id: str, name: str) -> dict:
+    def read_subtask_by_name(self, task_id: str, name: str, regex: bool=False) -> dict:
         """Read subtask by name for a task with the specified task id.
 
         Args:
-            task_id: Task identifier.
-            name: Name of the subtask to read.
+            task_id (str): Task identifier.
+            name (str): Name of the subtask to read or regex pattern if regex is True.
+            regex (bool): Indicates if "name" is a regex pattern.
 
         Returns:
-            Subtask as a dictionary.
+            (dict) Subtask as a dictionary.
         """
         # get the compact list of subtasks
         subtasks = self._client.tasks.get_subtasks_for_task(task_gid=task_id)
@@ -239,8 +241,14 @@ class AsanaInterface:
         # read each full subtask
         subtask = None
         for summary_task in subtasks:
-            if summary_task['name'] == name:
-                subtask = self.read_task(summary_task['gid'])
-                break
+            if not regex:
+                if summary_task['name'] == name:
+                    subtask = self.read_task(summary_task['gid'])
+                    break
+
+            else:
+                if re.match(name, summary_task['name']):
+                    subtask = self.read_task(summary_task['gid'])
+                    break
 
         return subtask
