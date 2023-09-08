@@ -3,7 +3,8 @@
 from aracnid_logger import Logger
 import pytest
 
-import i_asana as asn
+import asana
+import i_asana
 
 # initialize logging
 logger = Logger(__name__).get_logger()
@@ -11,60 +12,51 @@ logger = Logger(__name__).get_logger()
 # initialize module variables
 PROJECT_ID = '1201859291658493'  # BrewOps
 
-@pytest.fixture(name='asana')
+@pytest.fixture(name='asn')
 def fixture_asana_interface():
     """Pytest fixture to initialize and return the AsanaInterface object.
     """
-    return asn.AsanaInterface()
+    return i_asana.AsanaInterface()
 
-def test_get_project_by_id(asana):
+def test_get_project_by_id(asn):
     """Tests project get functionality.
     """
-    result = asana.client.projects.get_project(PROJECT_ID)
+    result = asn.projects.get_project(PROJECT_ID)
 
-    assert result['gid'] == PROJECT_ID
-    assert result['name'] == '[LABH] BrewOps'
+    assert result.data.gid == PROJECT_ID
+    assert result.data.name == '[LABH] BrewOps'
 
-def test_get_tasks_for_project(asana):
+def test_get_tasks_for_project(asn):
     """Tests get_tasks_for_project functionality.
     """
-    tasks = asana.client.tasks.get_tasks_for_project(PROJECT_ID)
-    for task in tasks:
+    tasks = asn.tasks.get_tasks_for_project(PROJECT_ID, limit=10)
+    for task in tasks.data:
         assert task
-        logger.info(task['name'])
+        logger.info(task.name)
 
-def test_get_section_id_from_task(asana):
+def test_get_section_id_from_task(asn):
     """Tests get_task functionality.
     """
-    task = asana.client.tasks.get_task('1202999621605567')
-    section_id = task['memberships'][0]['section']['gid']
-    section_name = task['memberships'][0]['section']['name']
+    task = asn.read_task('1202999621605567')
+    assert task.memberships[0].section.gid
+    assert task.memberships[0].section.name == 'Fermenting'
 
-    assert section_id
-    assert section_name == 'Fermenting'
+    task = asn.read_task('1202998731310349')
+    assert task.memberships[0].section.gid
+    assert task.memberships[0].section.name == 'Serving'
 
-    task = asana.client.tasks.get_task('1202998731310349')
-    section_id = task['memberships'][0]['section']['gid']
-    section_name = task['memberships'][0]['section']['name']
+    task = asn.read_task('1205092860586670')
+    assert task.memberships[0].section.gid
+    assert task.memberships[0].section.name == 'Weekly'
 
-    assert section_id
-    assert section_name == 'Serving'
-
-    task = asana.client.tasks.get_task('1205092860586670')
-    section_id = task['memberships'][0]['section']['gid']
-    section_name = task['memberships'][0]['section']['name']
-
-    assert section_id
-    assert section_name == 'Weekly'
-
-def test_get_task_by_name(asana):
+def test_get_task_by_name(asn):
     """Tests get task functionality by name.
     """
     workspace_id = '1108879292936985'
-    result = asana.client.tasks.search_tasks_for_workspace(workspace_id,
-        {
-            'text': '2023-W30'
-        }
+    result = asn.tasks.search_tasks_for_workspace(
+        workspace_id,
+        text='2023-W30'
     )
 
     assert result
+    assert isinstance(result, asana.models.task_response_array.TaskResponseArray)

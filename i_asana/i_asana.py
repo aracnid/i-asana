@@ -2,14 +2,14 @@
 """
 # pylint: disable=no-member
 
-from datetime import date, datetime, time
+from datetime import date, datetime
 import os
 import re
-from typing import Union
+from typing import Optional, Union
 
 from aracnid_logger import Logger
 import asana
-from pytz import utc
+from asana.rest import ApiException
 
 # initialize logging
 logger = Logger(__name__).get_logger()
@@ -31,14 +31,19 @@ class AsanaInterface:
     def __init__(self) -> None:
         """Initializes the interface.
         """
-        # read environment variables
-        asana_access_token = os.environ.get('ASANA_ACCESS_TOKEN')
-
         # initialize asana client
-        self._client = asana.Client.access_token(asana_access_token)
+        configuration = asana.Configuration()
+        configuration.access_token = os.environ.get('ASANA_ACCESS_TOKEN')
+        self._client = asana.ApiClient(configuration)
+
+        # initialize asana api instances
+        self._users = None
+        self._tasks = None
+        self._sections = None
+        self._projects = None
 
     @property
-    def client(self) -> asana.client.Client:
+    def client(self) -> asana.api_client.ApiClient:
         """Returns the Asana Client object.
 
         Returns:
@@ -46,15 +51,50 @@ class AsanaInterface:
         """
         return self._client
 
-    def create_task(
-        self,
-        name: str,
-        project_id: str,
-        start: Union[date, datetime]=None,
-        due: Union[date, datetime]=None,
-        section_id: str=None,
-        parent_id: str=None
-    ) -> dict:
+    @property
+    def users(self) -> asana.api.users_api.UsersApi:
+        """Returns an instance of the Users API.
+        """
+        if not self._users:
+            self._users = asana.UsersApi(self.client)
+
+        return self._users
+
+    @property
+    def tasks(self) -> asana.api.tasks_api.TasksApi:
+        """Returns an instance of the Tasks API.
+        """
+        if not self._tasks:
+            self._tasks = asana.TasksApi(self.client)
+
+        return self._tasks
+
+    @property
+    def sections(self) -> asana.api.sections_api.SectionsApi:
+        """Returns an instance of the Sections API.
+        """
+        if not self._sections:
+            self._sections = asana.SectionsApi(self.client)
+
+        return self._sections
+
+    @property
+    def projects(self):
+        """Returns an instance of the Projects API.
+        """
+        if not self._projects:
+            self._projects = asana.ProjectsApi(self.client)
+
+        return self._projects
+
+    def create_task(self,
+            name: str,
+            project_id: str,
+            start: Union[date, datetime]=None,
+            due: Union[date, datetime]=None,
+            section_id: str=None,
+            parent_id: str=None
+        ) -> asana.models.task_response.TaskResponse:
         """Create a task in the specified project and section
 
         Start is only set if due is set.
@@ -67,6 +107,7 @@ class AsanaInterface:
             section_id: (Optional) Section identifier.
             parent_id: (Optional) Parent identifier.
         """
+        task = task_data = None
         # create the task body
         body = {
             'name': name,
@@ -74,37 +115,46 @@ class AsanaInterface:
         }
         if due:
             if isinstance(due, datetime):
-                body['due_at'] = self.convert_asana_datetime(due)
+                body['due_at'] = due
             elif isinstance(due, date):
-                body['due_on'] = due.isoformat()
+                body['due_on'] = due
 
             if start:
                 if isinstance(start, datetime):
-                    body['start_at'] = self.convert_asana_datetime(start)
+                    body['start_at'] = start
                 elif isinstance(start, date):
-                    body['start_on'] = start.isoformat()
+                    body['start_on'] = start
+        task_body = asana.TasksBody(body)
 
         # create the task/subtask
         if parent_id:
-            task = self._client.tasks.create_subtask_for_task(parent_id, body)
+            try:
+                task_body = asana.TaskGidSubtasksBody(body)
+                task_data = self.tasks.create_subtask_for_task(task_body, parent_id)
+            except ApiException as err:
+                logger.error("Exception when calling TasksApi->create_subtask_for_task: %s\n", err)
         else:
-            task = self._client.tasks.create_task(body)
+            try:
+                task_body = asana.TasksBody(body)
+                task_data = self.tasks.create_task(task_body)
+            except ApiException as err:
+                logger.error("Exception when calling TasksApi->create_task: %s\n", err)
+        task = task_data.data if task_data else None
 
         # add task to the specified section
         if task and section_id:
-            self._client.sections.add_task_for_section(
+            task_body = asana.SectionGidAddTaskBody({'task': task.gid})
+            self.sections.add_task_for_section(
                 section_gid=section_id,
-                params={
-                    'task': task['gid']
-                }
+                body=task_body
             )
 
             # retrieve the updated task
-            task = self._client.tasks.get_task(task_gid=task['gid'])
+            task = self.read_task(task_id=task.gid)
 
         return task
 
-    def read_task(self, task_id: str) -> dict:
+    def read_task(self, task_id: str) -> Optional[asana.models.task_response.TaskResponse]:
         """Read a task with the specified task id.
 
         Args:
@@ -113,11 +163,19 @@ class AsanaInterface:
         Returns:
             Specified task as a dictionary.
         """
-        task = self._client.tasks.get_task(task_gid=task_id)
+        try:
+            task = self.tasks.get_task(task_gid=task_id)
+            return task.data
+        except ApiException as err:
+            if err.status == 404:
+                logger.warning('Requested task does not exist: %s', task_id)
+            else:
+                logger.error('Exception when calling TasksApi->read_task: %s\n', err)
 
-        return task
-
-    def update_task(self, task_id: str, fields: dict) -> dict:
+    def update_task(self,
+            task_id: str,
+            fields: dict
+        ) -> Optional[asana.models.task_response.TaskResponse]:
         """Update the specified task with the new fields.
 
         Args:
@@ -127,12 +185,15 @@ class AsanaInterface:
         Returns:
             Updated task as a dictionary.
         """
-        task = self._client.tasks.update_task(
-            task_gid=task_id,
-            params=fields
-        )
-
-        return task
+        try:
+            task_body = asana.TasksTaskGidBody(fields)
+            task = self.tasks.update_task(task_body, task_gid=task_id)
+            return task.data
+        except ApiException as err:
+            if err.status == 404:
+                logger.warning('Requested task does not exist: %s', task_id)
+            else:
+                logger.error("Exception when calling TasksApi->update_task: %s\n", err)
 
     def delete_task(self, task_id: str) -> None:
         """Delete a task with the specified task id.
@@ -143,69 +204,15 @@ class AsanaInterface:
         Returns:
             None.
         """
-        self._client.tasks.delete_task(task_gid=task_id)
+        try:
+            self.tasks.delete_task(task_gid=task_id)
+        except ApiException as err:
+            if err.status == 404:
+                logger.warning('Requested task does not exist: %s', task_id)
+            else:
+                logger.error("Exception when calling TasksApi->delete_task: %s\n", err)
 
-    @staticmethod
-    def convert_asana_datetime(datetime_obj: datetime) -> str:
-        """Convert a datetime object to a string usable by Asana.
-
-        Make sure that the input date-time is timezone-aware.
-
-        Args:
-            datetime_obj: Datetime object.
-
-        Returns:
-            Date-time as a string.
-        """
-        datetime_str = datetime_obj.strftime(
-            '%Y-%m-%dT%H:%M:%S%z'
-        )
-
-        return datetime_str
-
-    @classmethod
-    def get_due_date(cls, task: dict) -> date:
-        """Retrieve the date due.
-
-        Args:
-            task: Task object as a dictionary.
-
-        Returns:
-            Date due as a date object.
-        """
-        # get the due date string
-        due_date_str = task.get('due_on')
-
-        # convert string to date
-        due_date = date.fromisoformat(due_date_str)
-
-        return due_date
-
-    @classmethod
-    def get_due_datetime(cls, task: dict) -> datetime:
-        """Retrieve the date-time due.
-
-        If the due time is not specified in the task, noon local is used.
-
-        Args:
-            task: Task object as a dictionary.
-
-        Returns:
-            Date-time due as a datetime object.
-        """
-        # get the due date string and convert
-        due_datetime_str = task.get('due_at')
-        if due_datetime_str:
-            due_datetime_utc = utc.localize(datetime.fromisoformat(due_datetime_str[0:-1]))
-            due_datetime = due_datetime_utc.astimezone()
-        else:
-            due_date = cls.get_due_date(task)
-            if due_date:
-                due_datetime = datetime.combine(due_date, time(12, 0)).astimezone()
-
-        return due_datetime
-
-    def read_subtasks(self, task_id: str) -> list:
+    def read_subtasks(self, task_id: str) -> Optional[list]:
         """Read subtasks for a task with the specified task id.
 
         Args:
@@ -215,16 +222,27 @@ class AsanaInterface:
             List of subtasks.
         """
         # get the compact list of subtasks
-        subtasks = self._client.tasks.get_subtasks_for_task(task_gid=task_id)
+        try:
+            subtasks = self.tasks.get_subtasks_for_task(task_gid=task_id)
+        except ApiException as err:
+            if err.status == 404:
+                logger.warning('Requested task does not exist: %s', task_id)
+            else:
+                logger.error("Exception when calling TasksApi->get_subtasks_for_task: %s\n", err)
+            return None
 
         # read each full subtask
         subtask_list = []
-        for summary_task in subtasks:
-            subtask_list.append(self.read_task(summary_task['gid']))
+        for summary_task in subtasks.data:
+            subtask_list.append(self.read_task(summary_task.gid))
 
         return subtask_list
 
-    def read_subtask_by_name(self, task_id: str, name: str, regex: bool=False) -> dict:
+    def read_subtask_by_name(self,
+            task_id: str,
+            name: str,
+            regex: bool=False
+        ) -> Optional[asana.models.task_response.TaskResponse]:
         """Read subtask by name for a task with the specified task id.
 
         Args:
@@ -236,19 +254,26 @@ class AsanaInterface:
             (dict) Subtask as a dictionary.
         """
         # get the compact list of subtasks
-        subtasks = self._client.tasks.get_subtasks_for_task(task_gid=task_id)
+        try:
+            subtasks = self.tasks.get_subtasks_for_task(task_gid=task_id)
+        except ApiException as err:
+            if err.status == 404:
+                logger.warning('Requested task does not exist: %s', task_id)
+            else:
+                logger.error("Exception when calling TasksApi->get_subtasks_for_task: %s\n", err)
+            return None
 
         # read each full subtask
         subtask = None
-        for summary_task in subtasks:
+        for summary_task in subtasks.data:
             if not regex:
-                if summary_task['name'] == name:
-                    subtask = self.read_task(summary_task['gid'])
+                if summary_task.name == name:
+                    subtask = self.read_task(summary_task.gid)
                     break
 
             else:
-                if re.match(name, summary_task['name']):
-                    subtask = self.read_task(summary_task['gid'])
+                if re.match(name, summary_task.name):
+                    subtask = self.read_task(summary_task.gid)
                     break
 
         return subtask

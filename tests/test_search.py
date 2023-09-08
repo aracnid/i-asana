@@ -3,7 +3,7 @@
 from aracnid_logger import Logger
 import pytest
 
-import i_asana as asn
+import i_asana
 
 # initialize logging
 logger = Logger(__name__).get_logger()
@@ -12,42 +12,42 @@ logger = Logger(__name__).get_logger()
 PROJECT_ID = '1202019477793832'  # TEST
 SECTION_ID = '1202019477793835'
 
-@pytest.fixture(name='asana')
+@pytest.fixture(name='asn')
 def fixture_asana_interface():
     """Pytest fixture to initialize and return the AsanaInterface object.
     """
-    return asn.AsanaInterface()
+    return i_asana.AsanaInterface()
 
-def test_read_subtasks(asana):
+def test_read_subtasks(asn):
     """Tests read_subtasks() function.
     """
     task_id = '1202019477793844'
-    task_list = asana.read_subtasks(task_id=task_id)
+    task_list = asn.read_subtasks(task_id=task_id)
 
     assert task_list
-    assert task_list[0]['name'] == 'READ: subtask-1'
+    assert task_list[0].name == 'READ: subtask-1'
 
-def test_read_subtask_by_name(asana):
+def test_read_subtask_by_name(asn):
     """Tests read_subtask_by_name() function.
     """
     task_id = '1202019477793844'
-    task = asana.read_subtask_by_name(
+    task = asn.read_subtask_by_name(
         task_id=task_id,
         name='READ: subtask-2'
     )
 
     assert task
-    assert task['gid'] == '1202019477793847'
+    assert task.gid == '1202019477793847'
 
-def test_read_subtask_by_name_regex(asana):
+def test_read_subtask_by_name_regex(asn):
     """Tests read_subtask_by_name() function with regex argument.
     """
     task_id = '1202019477793844'
-    task = asana.read_subtask_by_name(
+    task = asn.read_subtask_by_name(
         task_id=task_id,
         name='^READ by regex',
         regex=True
     )
 
     assert task
-    assert task['gid'] == '1205419546504122'
+    assert task.gid == '1205419546504122'
