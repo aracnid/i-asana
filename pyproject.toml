@@ -18,12 +18,13 @@ pytz = "^2022.6"
 [tool.poetry.group.dev.dependencies]
 pylint = "^2.15"
 pytest = "^7.2"
+pytest-cov = "^4.1.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-addopts = "-p no:warnings"
+addopts = "-p no:warnings --cov-report xml:tests/cov.xml --cov=i_asana tests/"
 log_cli = true
 log_cli_level = "DEBUG"
