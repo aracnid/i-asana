@@ -6,6 +6,7 @@ from datetime import date, datetime
 import os
 import re
 from typing import Optional, Union
+from urllib.parse import quote_plus
 
 from aracnid_logger import Logger
 import asana
@@ -113,6 +114,30 @@ class AsanaInterface:
             self._projects = asana.ProjectsApi(self.client)
 
         return self._projects
+
+    @staticmethod
+    def url_param(field: str, value: str, field_prefix: str='') -> str:
+        """Returns a URL-safe query parameter.
+
+        Args:
+            field (str): Name of an Asana table field.
+            value (str): Value of an Asana table field.
+
+        Returns:
+            str: URL-safe query parameter.
+        """
+        # make field name
+        field_name = field
+        if field_prefix:
+            field_name = '_'.join((field_prefix, field))
+
+        # make parameter string
+        param = f'{field_name}={value}'
+
+        # replace spaces
+        param_safe = param.replace(' ', '+')
+
+        return param_safe
 
     def create_task(self,
             name: str,
