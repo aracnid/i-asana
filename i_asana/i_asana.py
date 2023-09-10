@@ -54,7 +54,7 @@ class AsanaInterface:
             'due_at',
             'due_on',
             'html_notes',
-            'memberships',
+            'memberships.(project|section).name',
             'modified_at',
             'name',
             'notes',
