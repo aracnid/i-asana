@@ -42,6 +42,33 @@ class AsanaInterface:
         self._sections = None
         self._projects = None
 
+        # define default task fields
+        self.opt_fields = [
+            'assignee',
+            'completed',
+            'completed_at',
+            'completed_by',
+            'created_at',
+            'custom_fields',
+            'due_at',
+            'due_on',
+            'html_notes',
+            'memberships',
+            'modified_at',
+            'name',
+            'notes',
+            'num_subtasks',
+            'parent',
+            'permalink_url',
+            'projects',
+            'resource_subtype',
+            'resource_type',
+            'start_at',
+            'start_on',
+            'tags',
+            'workspace'        
+        ]
+
     @property
     def client(self) -> asana.api_client.ApiClient:
         """Returns the Asana Client object.
@@ -93,7 +120,9 @@ class AsanaInterface:
             start: Union[date, datetime]=None,
             due: Union[date, datetime]=None,
             section_id: str=None,
-            parent_id: str=None
+            parent_id: str=None,
+            notes: str='',
+            html_notes: str=''
         ) -> asana.models.task_response.TaskResponse:
         """Create a task in the specified project and section
 
@@ -106,8 +135,11 @@ class AsanaInterface:
             due: Date or date-time when the task is due.
             section_id: (Optional) Section identifier.
             parent_id: (Optional) Parent identifier.
+            notes (str): (Optional) Task notes, unformatted.
+            html_notes (str): (Optional) Task notes, formatted in HTML.
         """
         task = task_data = None
+
         # create the task body
         body = {
             'name': name,
@@ -124,6 +156,10 @@ class AsanaInterface:
                     body['start_at'] = start
                 elif isinstance(start, date):
                     body['start_on'] = start
+        if notes:
+            body['notes'] = notes
+        elif html_notes:
+            body['html_notes'] = html_notes
         task_body = asana.TasksBody(body)
 
         # create the task/subtask
@@ -154,7 +190,9 @@ class AsanaInterface:
 
         return task
 
-    def read_task(self, task_id: str) -> Optional[asana.models.task_response.TaskResponse]:
+    def read_task(self,
+            task_id: str,
+        ) -> Optional[asana.models.task_response.TaskResponse]:
         """Read a task with the specified task id.
 
         Args:
@@ -164,7 +202,7 @@ class AsanaInterface:
             Specified task as a dictionary.
         """
         try:
-            task = self.tasks.get_task(task_gid=task_id)
+            task = self.tasks.get_task(task_id, opt_fields=self.opt_fields)
             return task.data
         except ApiException as err:
             if err.status == 404:
@@ -174,7 +212,7 @@ class AsanaInterface:
 
     def update_task(self,
             task_id: str,
-            fields: dict
+            fields: dict,
         ) -> Optional[asana.models.task_response.TaskResponse]:
         """Update the specified task with the new fields.
 
@@ -187,7 +225,7 @@ class AsanaInterface:
         """
         try:
             task_body = asana.TasksTaskGidBody(fields)
-            task = self.tasks.update_task(task_body, task_gid=task_id)
+            task = self.tasks.update_task(task_body, task_gid=task_id, opt_fields=self.opt_fields)
             return task.data
         except ApiException as err:
             if err.status == 404:
@@ -241,7 +279,7 @@ class AsanaInterface:
     def read_subtask_by_name(self,
             task_id: str,
             name: str,
-            regex: bool=False
+            regex: bool=False,
         ) -> Optional[asana.models.task_response.TaskResponse]:
         """Read subtask by name for a task with the specified task id.
 
