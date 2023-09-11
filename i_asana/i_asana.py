@@ -46,6 +46,9 @@ class AsanaInterface:
         # define default task fields
         self.opt_fields = [
             'assignee',
+            'assignee.name',
+            'assignee_section',
+            'assignee_section.name',
             'completed',
             'completed_at',
             'completed_by',
