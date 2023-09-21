@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "i-asana"
-version = "2.3.0"
+version = "2.3.1"
 description = "Python interface to Asana"
 authors = ["Jason Romano <aracnid@gmail.com>"]
 license = "MIT"
