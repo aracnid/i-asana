@@ -6,7 +6,6 @@ from datetime import date, datetime
 import os
 import re
 from typing import Optional, Union
-from urllib.parse import quote_plus
 
 from aracnid_logger import Logger
 import asana
@@ -40,6 +39,7 @@ class AsanaInterface:
         # initialize asana api instances
         self._users = None
         self._tasks = None
+        self._task_templates = None
         self._sections = None
         self._projects = None
 
@@ -99,6 +99,15 @@ class AsanaInterface:
             self._tasks = asana.TasksApi(self.client)
 
         return self._tasks
+
+    @property
+    def task_templates(self) -> asana.api.task_templates_api.TaskTemplatesApi:
+        """Returns an instance of the Task Templates API.
+        """
+        if not self._task_templates:
+            self._task_templates = asana.TaskTemplatesApi(self.client)
+
+        return self._task_templates
 
     @property
     def sections(self) -> asana.api.sections_api.SectionsApi:
