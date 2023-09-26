@@ -69,7 +69,7 @@ class AsanaInterface:
             'resource_type',
             'start_at',
             'start_on',
-            'tags',
+            'tags.name',
             'workspace'        
         ]
 
