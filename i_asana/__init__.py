@@ -3,4 +3,4 @@
 from i_asana.i_asana import AsanaInterface
 
 
-__version__ = '2.4.1'
+__version__ = '2.4.2'
