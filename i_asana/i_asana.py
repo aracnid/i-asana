@@ -42,6 +42,7 @@ class AsanaInterface:
         self._task_templates = None
         self._sections = None
         self._projects = None
+        self._webhooks = None
 
         # define default task fields
         self.opt_fields = [
@@ -72,6 +73,9 @@ class AsanaInterface:
             'tags.name',
             'workspace'        
         ]
+
+        # TODO: set this value programmatically
+        self.WORKSPACE_ID = '1108879292936985'
 
     @property
     def client(self) -> asana.api_client.ApiClient:
@@ -126,6 +130,15 @@ class AsanaInterface:
             self._projects = asana.ProjectsApi(self.client)
 
         return self._projects
+
+    @property
+    def webhooks(self):
+        """Returns an instance of the Webhooks API.
+        """
+        if not self._webhooks:
+            self._webhooks = asana.WebhooksApi(self.client)
+
+        return self._webhooks
 
     @staticmethod
     def url_param(field: str, value: str, field_prefix: str='') -> str:
@@ -352,3 +365,105 @@ class AsanaInterface:
                     break
 
         return subtask
+
+    def create_webhook(self,
+            resource: str,
+            url: str
+        ) -> asana.models.webhook_response.WebhookResponse:
+        """Create a webhook for the specified resource.
+
+        Args:
+            resource: Identifier of the Asana resource.
+            url: Target URL to deliver events from this webhook.
+
+        Returns:
+            (WebhookResponse) Created webhook.
+        """
+        webhook = webhook_data = None
+
+        # create the task body
+        body_fields = {
+            'resource': resource,
+            'target': url
+        }
+
+        # create the task/subtask
+        try:
+            webhook_body = asana.WebhooksBody(body_fields)
+            webhook_data = self.webhooks.create_webhook(body=webhook_body)
+        except ApiException as err:
+            logger.error("Exception when calling WebhooksApi->create_webhook: %s\n", err)
+        webhook = webhook_data.data if webhook_data else None
+
+        return webhook
+
+    def read_webhooks(self,
+            resource_id: str,
+        ) -> list:
+        """Returns a set of webhooks associated with the specified resource.
+
+        Args:
+            resource_id: Identifier of the Asana resource that contains webhooks.
+
+        Returns:
+            (list) List of webhooks.
+        """
+        try:
+            webhook_data = self.webhooks.get_webhooks(
+                self.WORKSPACE_ID,
+                resource=resource_id
+            )
+            return webhook_data.data
+        except ApiException as err:
+            logger.error('Exception when calling WebhooksApi->get_webhooks: %s\n', err)
+
+    def read_webhook(self,
+            webhook_id: str,
+        ) -> asana.models.webhook_response.WebhookResponse:
+        """Returns the specified webhook.
+
+        Args:
+            webhook_id: Identifier for the specified webhook.
+
+        Returns:
+            (WebhookResponse) Webhook object.
+        """
+        try:
+            webhook_data = self.webhooks.get_webhook(
+                webhook_gid=webhook_id
+            )
+            return webhook_data.data
+        except ApiException as err:
+            logger.error('Exception when calling WebhooksApi->get_webhook: %s\n', err)
+
+    def delete_webhook(self,
+            webhook_id: str,
+        ) -> None:
+        """Deletes the specified webhook.
+
+        Args:
+            webhook_id: Identifier for the specified webhook.
+        """
+        try:
+            self.webhooks.delete_webhook(
+                webhook_gid=webhook_id
+            )
+        except ApiException as err:
+            logger.error('Exception when calling WebhooksApi->delete_webhook: %s\n', err)
+
+    def delete_webhooks(self,
+            resource_id: str,
+        ) -> None:
+        """Deletes the specified webhook.
+
+        Args:
+            resource: Identifier of the Asana resource.
+        """
+        try:
+            webhook_list = self.read_webhooks(resource_id=resource_id)
+            for webhook in webhook_list:
+                self.webhooks.delete_webhook(
+                    webhook_gid=webhook.gid
+                )
+        except ApiException as err:
+            logger.error('Exception when calling WebhooksApi->delete_webhooks: %s\n', err)
