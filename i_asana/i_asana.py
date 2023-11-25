@@ -75,7 +75,7 @@ class AsanaInterface:
         ]
 
         # TODO: set this value programmatically
-        self.WORKSPACE_ID = '1108879292936985'
+        self.workspace_id = '1108879292936985'
 
     @property
     def client(self) -> asana.api_client.ApiClient:
@@ -410,7 +410,7 @@ class AsanaInterface:
         """
         try:
             webhook_data = self.webhooks.get_webhooks(
-                self.WORKSPACE_ID,
+                self.workspace_id,
                 resource=resource_id
             )
             return webhook_data.data
