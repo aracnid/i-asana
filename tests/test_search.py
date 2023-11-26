@@ -1,9 +1,6 @@
-"""Test functions for i_asana.py.
+"""Test functions for searching subtasks.
 """
 from aracnid_logger import Logger
-import pytest
-
-import i_asana
 
 # initialize logging
 logger = Logger(__name__).get_logger()
@@ -12,11 +9,6 @@ logger = Logger(__name__).get_logger()
 PROJECT_ID = '1202019477793832'  # TEST
 SECTION_ID = '1202019477793835'
 
-@pytest.fixture(name='asn')
-def fixture_asana_interface():
-    """Pytest fixture to initialize and return the AsanaInterface object.
-    """
-    return i_asana.AsanaInterface()
 
 def test_read_subtasks(asn):
     """Tests read_subtasks() function.

@@ -1,6 +1,7 @@
 """Class module to interface with Asana.
 """
-# pylint: disable=no-member
+# pylint: disable=logging-too-many-args,no-member
+# pylint: disable=too-many-arguments,too-many-branches,too-many-instance-attributes
 
 from datetime import date, datetime
 import os
@@ -259,6 +260,7 @@ class AsanaInterface:
                 logger.warning('Requested task does not exist: %s', task_id)
             else:
                 logger.error('Exception when calling TasksApi->read_task: %s\n', err)
+        return None
 
     def update_task(self,
             task_id: str,
@@ -282,6 +284,7 @@ class AsanaInterface:
                 logger.warning('Requested task does not exist: %s', task_id)
             else:
                 logger.error("Exception when calling TasksApi->update_task: %s\n", err)
+        return None
 
     def delete_task(self, task_id: str) -> None:
         """Delete a task with the specified task id.
@@ -416,6 +419,7 @@ class AsanaInterface:
             return webhook_data.data
         except ApiException as err:
             logger.error('Exception when calling WebhooksApi->get_webhooks: %s\n', err)
+        return None
 
     def read_webhook(self,
             webhook_id: str,
@@ -435,6 +439,7 @@ class AsanaInterface:
             return webhook_data.data
         except ApiException as err:
             logger.error('Exception when calling WebhooksApi->get_webhook: %s\n', err)
+        return None
 
     def delete_webhook(self,
             webhook_id: str,

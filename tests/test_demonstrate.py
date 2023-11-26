@@ -1,10 +1,8 @@
-"""Test functions for i_asana.py.
+"""Test functions for demonstration purposes.
 """
 from aracnid_logger import Logger
-import pytest
 
 import asana
-import i_asana
 
 # initialize logging
 logger = Logger(__name__).get_logger()
@@ -12,11 +10,6 @@ logger = Logger(__name__).get_logger()
 # initialize module variables
 PROJECT_ID = '1201859291658493'  # BrewOps
 
-@pytest.fixture(name='asn')
-def fixture_asana_interface():
-    """Pytest fixture to initialize and return the AsanaInterface object.
-    """
-    return i_asana.AsanaInterface()
 
 def test_get_project_by_id(asn):
     """Tests project get functionality.
