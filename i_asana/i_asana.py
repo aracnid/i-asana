@@ -472,3 +472,40 @@ class AsanaInterface:
                 )
         except ApiException as err:
             logger.error('Exception when calling WebhooksApi->delete_webhooks: %s\n', err)
+
+    def read_users(self) -> list:
+        """Returns a set of users associated with the specified resource.
+
+        Args:
+            resource_id: Identifier of the Asana resource that contains users.
+
+        Returns:
+            (list) List of users.
+        """
+        try:
+            user_data = self.users.get_users(
+                workspace=self.workspace_id
+            )
+            return user_data.data
+        except ApiException as err:
+            logger.error('Exception when calling get_users(): %s\n', err)
+        return None
+
+    def read_user(self,
+            user_id: str,
+        ) -> asana.models.user_response.UserResponse:
+        """Returns the specified user.
+
+        Args:
+            user_id: Identifier for the specified user.
+
+        Returns:
+            (WebhookResponse) Webhook object.
+        """
+        try:
+            user_data = self.users.get_user(
+                user_gid=user_id
+            )
+            return user_data.data
+        except ApiException:
+            return None
