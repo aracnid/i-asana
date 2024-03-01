@@ -11,7 +11,7 @@ slack-bolt = ">=1.14,<1.15"
 
 [[package]]
 name = "asana"
-version = "4.0.11"
+version = "5.0.3"
 description = "Asana"
 category = "main"
 optional = false
@@ -305,7 +305,7 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "6cb9f2789cb110cd02d4612d9f33ad0702250424d47aa2820f6729d915bb14ce"
+content-hash = "b2388507258e998d16e3d2a7beb1f93eee5d204e1b9f290058fa9ee5284df8fe"
 
 [metadata.files]
 aracnid-logger = [
@@ -313,8 +313,8 @@ aracnid-logger = [
     {file = "aracnid_logger-1.0.2.tar.gz", hash = "sha256:1007a295c0ff61d4cd24543f572d9ed78708b5bb3bd072d9e6b1ec60832939c0"},
 ]
 asana = [
-    {file = "asana-4.0.11-py3-none-any.whl", hash = "sha256:355ea5ee6f6bbd2dfc7d8bd4825e787cb8335575698b8db12bafab283a18b948"},
-    {file = "asana-4.0.11.tar.gz", hash = "sha256:566a77f21809e4e9f5a2258076c18170bc15d801e1f9514b1e116d16198b0da2"},
+    {file = "asana-5.0.3-py3-none-any.whl", hash = "sha256:fe311dd07f8940b633e05ec6754eb375b1206f506e1dcc63a7064e9513fe04e6"},
+    {file = "asana-5.0.3.tar.gz", hash = "sha256:62518f736d4600c56d30d0f9a2f840bb55f653e9c69dd9760510b4927ac9714f"},
 ]
 astroid = [
     {file = "astroid-3.0.1-py3-none-any.whl", hash = "sha256:7d5895c9825e18079c5aeac0572bc2e4c83205c95d416e0b4fee8bc361d2d9ca"},

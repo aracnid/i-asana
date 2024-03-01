@@ -46,34 +46,34 @@ class AsanaInterface:
         self._webhooks = None
 
         # define default task fields
-        self.opt_fields = [
-            'assignee',
-            'assignee.name',
-            'assignee_section',
-            'assignee_section.name',
-            'completed',
-            'completed_at',
-            'completed_by',
-            'created_at',
-            'custom_fields',
-            'due_at',
-            'due_on',
-            'html_notes',
-            'memberships.(project|section).name',
-            'modified_at',
-            'name',
-            'notes',
-            'num_subtasks',
-            'parent',
-            'permalink_url',
-            'projects',
-            'resource_subtype',
-            'resource_type',
-            'start_at',
-            'start_on',
-            'tags.name',
+        self.opt_fields = (
+            'assignee,'
+            'assignee.name,'
+            'assignee_section,'
+            'assignee_section.name,'
+            'completed,'
+            'completed_at,'
+            'completed_by,'
+            'created_at,'
+            'custom_fields,'
+            'due_at,'
+            'due_on,'
+            'html_notes,'
+            'memberships.(project|section).name,'
+            'modified_at,'
+            'name,'
+            'notes,'
+            'num_subtasks,'
+            'parent,'
+            'permalink_url,'
+            'projects,'
+            'resource_subtype,'
+            'resource_type,'
+            'start_at,'
+            'start_on,'
+            'tags.name,'
             'workspace'        
-        ]
+        )
 
         # TODO: set this value programmatically
         self.workspace_id = '1108879292936985'
@@ -174,7 +174,7 @@ class AsanaInterface:
             parent_id: str=None,
             notes: str='',
             html_notes: str=''
-        ) -> asana.models.task_response.TaskResponse:
+        ) -> dict:
         """Create a task in the specified project and section
 
         Start is only set if due is set.
@@ -188,8 +188,11 @@ class AsanaInterface:
             parent_id: (Optional) Parent identifier.
             notes (str): (Optional) Task notes, unformatted.
             html_notes (str): (Optional) Task notes, formatted in HTML.
+
+        Returns:
+            (dict) Task object.
         """
-        task = task_data = None
+        task = None
 
         # create the task body
         body = {
@@ -211,50 +214,68 @@ class AsanaInterface:
             body['notes'] = notes
         elif html_notes:
             body['html_notes'] = html_notes
-        task_body = asana.TasksBody(body)
+
+        # create the options
+        opts = {}
 
         # create the task/subtask
         if parent_id:
             try:
-                task_body = asana.TaskGidSubtasksBody(body)
-                task_data = self.tasks.create_subtask_for_task(task_body, parent_id)
+                task = self.tasks.create_subtask_for_task(
+                    body={
+                        'data': body
+                    },
+                    task_gid=parent_id,
+                    opts=opts
+                )
             except ApiException as err:
                 logger.error("Exception when calling TasksApi->create_subtask_for_task: %s\n", err)
         else:
             try:
-                task_body = asana.TasksBody(body)
-                task_data = self.tasks.create_task(task_body)
+                task = self.tasks.create_task(
+                    body={
+                        'data': body
+                    },
+                    opts=opts
+                )
             except ApiException as err:
                 logger.error("Exception when calling TasksApi->create_task: %s\n", err)
-        task = task_data.data if task_data else None
 
         # add task to the specified section
         if task and section_id:
-            task_body = asana.SectionGidAddTaskBody({'task': task.gid})
             self.sections.add_task_for_section(
                 section_gid=section_id,
-                body=task_body
+                opts={
+                    'body': {
+                        'data': {
+                            'task': task['gid']
+                        }
+                    }
+                }
             )
 
             # retrieve the updated task
-            task = self.read_task(task_id=task.gid)
+            task = self.read_task(task_id=task['gid'])
 
         return task
 
     def read_task(self,
             task_id: str,
-        ) -> Optional[asana.models.task_response.TaskResponse]:
+        ) -> dict:
         """Read a task with the specified task id.
 
         Args:
             task_id: Task identifier.
 
         Returns:
-            Specified task as a dictionary.
+            (dict) Specified task as a dictionary.
         """
         try:
-            task = self.tasks.get_task(task_id, opt_fields=self.opt_fields)
-            return task.data
+            task = self.tasks.get_task(
+                task_gid=task_id,
+                opts={'opt_fields': self.opt_fields}
+            )
+            return task
         except ApiException as err:
             if err.status == 404:
                 logger.warning('Requested task does not exist: %s', task_id)
@@ -265,7 +286,7 @@ class AsanaInterface:
     def update_task(self,
             task_id: str,
             fields: dict,
-        ) -> Optional[asana.models.task_response.TaskResponse]:
+        ) -> dict:
         """Update the specified task with the new fields.
 
         Args:
@@ -273,12 +294,15 @@ class AsanaInterface:
             fields: Fields to updated.
 
         Returns:
-            Updated task as a dictionary.
+            (dict) Updated task as a dictionary.
         """
         try:
-            task_body = asana.TasksTaskGidBody(fields)
-            task = self.tasks.update_task(task_body, task_gid=task_id, opt_fields=self.opt_fields)
-            return task.data
+            task = self.tasks.update_task(
+                body={'data': fields},
+                task_gid=task_id,
+                opts={'opt_fields': self.opt_fields}
+            )
+            return task
         except ApiException as err:
             if err.status == 404:
                 logger.warning('Requested task does not exist: %s', task_id)
@@ -314,7 +338,10 @@ class AsanaInterface:
         """
         # get the compact list of subtasks
         try:
-            subtasks = self.tasks.get_subtasks_for_task(task_gid=task_id)
+            subtasks = self.tasks.get_subtasks_for_task(
+                task_gid=task_id,
+                opts={}
+            )
         except ApiException as err:
             if err.status == 404:
                 logger.warning('Requested task does not exist: %s', task_id)
@@ -324,8 +351,8 @@ class AsanaInterface:
 
         # read each full subtask
         subtask_list = []
-        for summary_task in subtasks.data:
-            subtask_list.append(self.read_task(summary_task.gid))
+        for summary_task in subtasks:
+            subtask_list.append(self.read_task(summary_task['gid']))
 
         return subtask_list
 
@@ -333,7 +360,7 @@ class AsanaInterface:
             task_id: str,
             name: str,
             regex: bool=False,
-        ) -> Optional[asana.models.task_response.TaskResponse]:
+        ):
         """Read subtask by name for a task with the specified task id.
 
         Args:
@@ -346,7 +373,10 @@ class AsanaInterface:
         """
         # get the compact list of subtasks
         try:
-            subtasks = self.tasks.get_subtasks_for_task(task_gid=task_id)
+            subtasks = self.tasks.get_subtasks_for_task(
+                task_gid=task_id,
+                opts={}
+            )
         except ApiException as err:
             if err.status == 404:
                 logger.warning('Requested task does not exist: %s', task_id)
@@ -356,15 +386,15 @@ class AsanaInterface:
 
         # read each full subtask
         subtask = None
-        for summary_task in subtasks.data:
+        for summary_task in subtasks:
             if not regex:
-                if summary_task.name == name:
-                    subtask = self.read_task(summary_task.gid)
+                if summary_task['name'] == name:
+                    subtask = self.read_task(summary_task['gid'])
                     break
 
             else:
-                if re.match(name, summary_task.name):
-                    subtask = self.read_task(summary_task.gid)
+                if re.match(name, summary_task['name']):
+                    subtask = self.read_task(summary_task['gid'])
                     break
 
         return subtask
@@ -372,7 +402,7 @@ class AsanaInterface:
     def create_webhook(self,
             resource: str,
             url: str
-        ) -> asana.models.webhook_response.WebhookResponse:
+        ):
         """Create a webhook for the specified resource.
 
         Args:
@@ -382,7 +412,7 @@ class AsanaInterface:
         Returns:
             (WebhookResponse) Created webhook.
         """
-        webhook = webhook_data = None
+        webhook = None
 
         # create the task body
         body_fields = {
@@ -392,11 +422,12 @@ class AsanaInterface:
 
         # create the task/subtask
         try:
-            webhook_body = asana.WebhooksBody(body_fields)
-            webhook_data = self.webhooks.create_webhook(body=webhook_body)
+            webhook = self.webhooks.create_webhook(
+                body={'data': body_fields},
+                opts={}
+            )
         except ApiException as err:
             logger.error("Exception when calling WebhooksApi->create_webhook: %s\n", err)
-        webhook = webhook_data.data if webhook_data else None
 
         return webhook
 
@@ -412,18 +443,20 @@ class AsanaInterface:
             (list) List of webhooks.
         """
         try:
-            webhook_data = self.webhooks.get_webhooks(
-                self.workspace_id,
-                resource=resource_id
+            webhooks = self.webhooks.get_webhooks(
+                workspace=self.workspace_id,
+                opts={
+                    'resource': resource_id
+                }
             )
-            return webhook_data.data
+            return list(webhooks)
         except ApiException as err:
             logger.error('Exception when calling WebhooksApi->get_webhooks: %s\n', err)
         return None
 
     def read_webhook(self,
             webhook_id: str,
-        ) -> asana.models.webhook_response.WebhookResponse:
+        ) -> dict:
         """Returns the specified webhook.
 
         Args:
@@ -433,10 +466,11 @@ class AsanaInterface:
             (WebhookResponse) Webhook object.
         """
         try:
-            webhook_data = self.webhooks.get_webhook(
-                webhook_gid=webhook_id
+            webhook = self.webhooks.get_webhook(
+                webhook_gid=webhook_id,
+                opts={}
             )
-            return webhook_data.data
+            return webhook
         except ApiException as err:
             logger.error('Exception when calling WebhooksApi->get_webhook: %s\n', err)
         return None
@@ -468,7 +502,7 @@ class AsanaInterface:
             webhook_list = self.read_webhooks(resource_id=resource_id)
             for webhook in webhook_list:
                 self.webhooks.delete_webhook(
-                    webhook_gid=webhook.gid
+                    webhook_gid=webhook['gid']
                 )
         except ApiException as err:
             logger.error('Exception when calling WebhooksApi->delete_webhooks: %s\n', err)
@@ -484,28 +518,31 @@ class AsanaInterface:
         """
         try:
             user_data = self.users.get_users(
-                workspace=self.workspace_id
+                opts={
+                    'workspace': self.workspace_id
+                }
             )
-            return user_data.data
+            return list(user_data)
         except ApiException as err:
             logger.error('Exception when calling get_users(): %s\n', err)
         return None
 
     def read_user(self,
             user_id: str,
-        ) -> asana.models.user_response.UserResponse:
+        ) -> dict:
         """Returns the specified user.
 
         Args:
             user_id: Identifier for the specified user.
 
         Returns:
-            (WebhookResponse) Webhook object.
+            (dict) User object.
         """
         try:
-            user_data = self.users.get_user(
-                user_gid=user_id
+            user = self.users.get_user(
+                user_gid=user_id,
+                opts={}
             )
-            return user_data.data
+            return user
         except ApiException:
             return None

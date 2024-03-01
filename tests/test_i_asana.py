@@ -2,6 +2,8 @@
 """
 from datetime import date, datetime, timedelta
 from aracnid_logger import Logger
+from dateutil.parser import parse
+
 
 # initialize logging
 logger = Logger(__name__).get_logger()
@@ -16,9 +18,9 @@ def test_init_asana(asn):
     """
     assert asn
 
-    user_me = asn.users.get_user('me')
+    user_me = asn.users.get_user(user_gid='me', opts={})
 
-    assert user_me.data.workspaces[0].name == 'lakeannebrewhouse.com'
+    assert user_me['workspaces'][0]['name'] == 'lakeannebrewhouse.com'
 
 def test_create_task_no_due_date(asn):
     """Tests create_task() function.
@@ -44,7 +46,7 @@ def test_create_task_due_date(asn):
     )
 
     assert task
-    assert task.start_on == start_date
+    assert task['start_on'] == start_date.isoformat()
 
 def test_create_task_due_datetime(asn):
     """Tests create_task() function.
@@ -56,9 +58,10 @@ def test_create_task_due_datetime(asn):
         due=due_datetime,
         project_id=PROJECT_ID
     )
-
     assert task
-    assert task.due_at == due_datetime
+
+    due_at = parse(task['due_at']).astimezone()
+    assert due_at == due_datetime
 
 def test_create_task_start_date(asn):
     """Tests create_task() function.
@@ -70,9 +73,10 @@ def test_create_task_start_date(asn):
         due=due_date,
         project_id=PROJECT_ID
     )
-
     assert task
-    assert task.due_on == due_date
+
+    due_on = date.fromisoformat(task['due_on'])
+    assert due_on == due_date
 
 def test_create_task_in_section(asn):
     """Tests create_task() function.
@@ -82,9 +86,9 @@ def test_create_task_in_section(asn):
         project_id=PROJECT_ID,
         section_id=SECTION_ID
     )
-
     assert task
-    assert task.memberships[0].section.gid == SECTION_ID
+
+    assert task['memberships'][0]['section']['gid'] == SECTION_ID
 
 def test_create_subtask_in_task(asn):
     """Tests create_task() function.
@@ -96,9 +100,9 @@ def test_create_subtask_in_task(asn):
         section_id=SECTION_ID,
         parent_id=parent_id
     )
-
     assert task
-    assert task.parent.gid == parent_id
+
+    assert task['parent']['gid'] == parent_id
 
 def test_read_task(asn):
     """Tests read_task() function.
@@ -107,14 +111,14 @@ def test_read_task(asn):
     task = asn.read_task(task_id=task_id)
 
     assert task
-    assert task.name == 'READ: no-due-date'
+    assert task['name'] == 'READ: no-due-date'
 
 def test_get_due_date(asn):
     """Tests the get_due_date() function.
     """
     task_id = '1202019477793837'
     task = asn.read_task(task_id=task_id)
-    due_date = task.due_on
+    due_date = parse(task['due_on']).date()
 
     assert due_date
     assert isinstance(due_date, date)
@@ -124,7 +128,7 @@ def test_get_due_datetime(asn):
     """
     task_id = '1202019477793839'
     task = asn.read_task(task_id=task_id)
-    due_datetime = task.due_at
+    due_datetime = parse(task['due_at'])
 
     assert due_datetime
     assert isinstance(due_datetime, datetime)
@@ -136,9 +140,9 @@ def test_update_task(asn):
         name='UPDATE: created',
         project_id=PROJECT_ID
     )
-    assert task.name == 'UPDATE: created'
+    assert task['name'] == 'UPDATE: created'
 
-    task_id = task.gid
+    task_id = task['gid']
     task = asn.update_task(
         task_id=task_id,
         fields={
@@ -146,7 +150,7 @@ def test_update_task(asn):
         }
     )
 
-    assert task.name == 'UPDATE: updated'
+    assert task['name'] == 'UPDATE: updated'
 
 def test_delete_task(asn):
     """Tests delete_task() function.
@@ -155,9 +159,9 @@ def test_delete_task(asn):
         name='DELETE: created',
         project_id=PROJECT_ID
     )
-    assert task.name == 'DELETE: created'
+    assert task['name'] == 'DELETE: created'
 
-    task_id = task.gid
+    task_id = task['gid']
     asn.delete_task(task_id=task_id)
 
     task = asn.read_task(task_id=task_id)

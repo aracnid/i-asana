@@ -17,7 +17,7 @@ def test_read_subtasks(asn):
     task_list = asn.read_subtasks(task_id=task_id)
 
     assert task_list
-    assert task_list[0].name == 'READ: subtask-1'
+    assert task_list[0]['name'] == 'READ: subtask-1'
 
 def test_read_subtask_by_name(asn):
     """Tests read_subtask_by_name() function.
@@ -29,7 +29,7 @@ def test_read_subtask_by_name(asn):
     )
 
     assert task
-    assert task.gid == '1202019477793847'
+    assert task['gid'] == '1202019477793847'
 
 def test_read_subtask_by_name_regex(asn):
     """Tests read_subtask_by_name() function with regex argument.
@@ -42,4 +42,4 @@ def test_read_subtask_by_name_regex(asn):
     )
 
     assert task
-    assert task.gid == '1205419546504122'
+    assert task['gid'] == '1205419546504122'

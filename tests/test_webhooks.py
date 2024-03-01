@@ -1,4 +1,6 @@
 """Test functions for webhooks.
+
+To test these functions, you must have a server started to receive the handshake.
 """
 from aracnid_logger import Logger
 import pytest
@@ -11,7 +13,7 @@ logger = Logger(__name__).get_logger()
 # initialize module variables
 PROJECT_ID = '1202019477793832'  # TEST
 SECTION_ID = '1202019477793835'
-BASE_URL = 'https://z11rzncz-5000.use.devtunnels.ms/'
+BASE_URL = 'https://c8gbl5t5-5000.use.devtunnels.ms/'
 
 @pytest.fixture(name='asn')
 def fixture_asana_interface():
@@ -48,7 +50,7 @@ def test_read_webhook(asn):
     webhook_list = asn.read_webhooks(
         resource_id=PROJECT_ID
     )
-    webhook_id = webhook_list[0].gid
+    webhook_id = webhook_list[0]['gid']
 
     webhook = asn.read_webhook(webhook_id)
 
@@ -68,7 +70,7 @@ def test_delete_webhook(asn):
         webhook_list = asn.read_webhooks(resource_id=PROJECT_ID)
 
     # delete a webhook
-    webhook_id = webhook_list[0].gid
+    webhook_id = webhook_list[0]['gid']
     asn.delete_webhook(webhook_id)
 
     # verify webhook was deleted
