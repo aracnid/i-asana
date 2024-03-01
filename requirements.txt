@@ -1,9 +1,9 @@
 aracnid-logger==1.0.2 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:1007a295c0ff61d4cd24543f572d9ed78708b5bb3bd072d9e6b1ec60832939c0 \
     --hash=sha256:106d4c6379dd2e1d47d1579b43c564809bc9b9e6b5753c6b2569db33c3d0c256
-asana==4.0.11 ; python_version >= "3.10" and python_version < "4.0" \
-    --hash=sha256:355ea5ee6f6bbd2dfc7d8bd4825e787cb8335575698b8db12bafab283a18b948 \
-    --hash=sha256:566a77f21809e4e9f5a2258076c18170bc15d801e1f9514b1e116d16198b0da2
+asana==5.0.3 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:62518f736d4600c56d30d0f9a2f840bb55f653e9c69dd9760510b4927ac9714f \
+    --hash=sha256:fe311dd07f8940b633e05ec6754eb375b1206f506e1dcc63a7064e9513fe04e6
 certifi==2023.11.17 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:9b469f3a900bf28dc19b8cfbf8019bf47f7fdd1a65a1d4ffb98fc14166beb4d1 \
     --hash=sha256:e036ab49d5b79556f99cfc2d9320b34cfbe5be05c5871b51de9329f0603b0474
